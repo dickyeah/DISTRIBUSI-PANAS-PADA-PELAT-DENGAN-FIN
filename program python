@@ -1,0 +1,49 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Parameter pelat
+Lx = 15  # lebar pelat (mm)
+Ly = 36  # tinggi pelat (mm)
+nx, ny = 50, 120  # jumlah grid pada arah x dan y
+dx = Lx / (nx - 1)
+dy = Ly / (ny - 1)
+
+# Temperatur batas
+T_base = 350  # suhu dasar pelat (K)
+T_ambient = 360  # suhu sisi lain (K)
+
+# Inisialisasi grid temperatur
+T = np.full((ny, nx), T_ambient)
+
+# Kondisi batas
+T[0, :] = T_base  # dasar pelat
+T[-1, :] = T_ambient  # sisi atas
+T[:, 0] = T_ambient  # sisi kiri
+T[:, -1] = T_ambient  # sisi kanan
+
+# Iterasi metode Jacobi
+max_iter = 5000
+tolerance = 1e-5
+for it in range(max_iter):
+    T_new = T.copy()
+    for i in range(1, ny - 1):
+        for j in range(1, nx - 1):
+            T_new[i, j] = 0.25 * (T[i+1, j] + T[i-1, j] + T[i, j+1] + T[i, j-1])
+    # Periksa konvergensi
+    if np.max(np.abs(T_new - T)) < tolerance:
+        print(f"Konvergensi tercapai pada iterasi ke-{it}")
+        break
+    T = T_new
+
+# Plot distribusi temperatur
+x = np.linspace(0, Lx, nx)
+y = np.linspace(0, Ly, ny)
+X, Y = np.meshgrid(x, y)
+
+plt.figure(figsize=(8, 6))
+contour = plt.contourf(X, Y, T, cmap='jet', levels=50)
+plt.colorbar(contour)
+plt.title("Distribusi Temperatur pada Pelat Fin")
+plt.xlabel("Lebar (mm)")
+plt.ylabel("Tinggi (mm)")
+plt.show()
